@@ -4,7 +4,7 @@ set -euo pipefail
 
 GH_REPO="https://github.com/openshift-online/ocm-cli"
 TOOL_NAME="ocm"
-TOOL_TEST="ocm --version"
+TOOL_TEST="ocm version"
 
 OS_STRING="$(uname -s | tr '[:upper:]' '[:lower:]')"
 
@@ -13,7 +13,7 @@ fail() {
 	exit 1
 }
 
-curl_opts=(-vfsSL)
+curl_opts=(-fsSL)
 
 # NOTE: You might want to remove this if ocm-cli is not hosted on GitHub releases.
 if [ -n "${GITHUB_API_TOKEN:-}" ]; then
