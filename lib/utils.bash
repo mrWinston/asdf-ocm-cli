@@ -2,17 +2,18 @@
 
 set -euo pipefail
 
-# TODO: Ensure this is the correct GitHub homepage where releases can be downloaded for ocm-cli.
 GH_REPO="https://github.com/openshift-online/ocm-cli"
-TOOL_NAME="ocm-cli"
+TOOL_NAME="ocm"
 TOOL_TEST="ocm --version"
+
+OS_STRING="$(uname -s | tr '[:upper:]' '[:lower:]')"
 
 fail() {
 	echo -e "asdf-$TOOL_NAME: $*"
 	exit 1
 }
 
-curl_opts=(-fsSL)
+curl_opts=(-vfsSL)
 
 # NOTE: You might want to remove this if ocm-cli is not hosted on GitHub releases.
 if [ -n "${GITHUB_API_TOKEN:-}" ]; then
@@ -31,7 +32,6 @@ list_github_tags() {
 }
 
 list_all_versions() {
-	# TODO: Adapt this. By default we simply list the tag names from GitHub releases.
 	# Change this function if ocm-cli has other means of determining installable versions.
 	list_github_tags
 }
@@ -41,8 +41,7 @@ download_release() {
 	version="$1"
 	filename="$2"
 
-	# TODO: Adapt the release URL convention for ocm-cli
-	url="$GH_REPO/archive/v${version}.tar.gz"
+	url="$GH_REPO/releases/download/v${version}/${TOOL_NAME}-${OS_STRING}-amd64"
 
 	echo "* Downloading $TOOL_NAME release $version..."
 	curl "${curl_opts[@]}" -o "$filename" -C - "$url" || fail "Could not download $url"
@@ -52,6 +51,7 @@ install_version() {
 	local install_type="$1"
 	local version="$2"
 	local install_path="${3%/bin}/bin"
+	local filename="${TOOL_NAME}-${version}"
 
 	if [ "$install_type" != "version" ]; then
 		fail "asdf-$TOOL_NAME supports release installs only"
@@ -59,11 +59,10 @@ install_version() {
 
 	(
 		mkdir -p "$install_path"
-		cp -r "$ASDF_DOWNLOAD_PATH"/* "$install_path"
-
-		# TODO: Assert ocm-cli executable exists.
 		local tool_cmd
 		tool_cmd="$(echo "$TOOL_TEST" | cut -d' ' -f1)"
+
+		cp "${ASDF_DOWNLOAD_PATH}/${filename}" "${install_path}/${tool_cmd}"
 		test -x "$install_path/$tool_cmd" || fail "Expected $install_path/$tool_cmd to be executable."
 
 		echo "$TOOL_NAME $version installation was successful!"
